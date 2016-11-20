@@ -1,0 +1,130 @@
+CLASS create_range
+
+	CLASSWIDE widget form_id, apply_btn, cancel_btn, dbx_rangeName, @
+	dbx_targetValue
+
+FUNCTION INIT()
+	form_id = ui_form_create(				@
+		/*  callback   */     "",			@
+		/*      x      */    5.0,       	@
+		/*      y      */    1.0,			@
+		/*  position   */     "UR",      	@
+		/*    width    */    2.5,       	@
+		/*   height    */    2.5,       	@
+		/*    label    */"Create Range", 	@
+		/*  iconname   */   ""              @
+	)
+	
+	apply_btn = ui_button_create(			@
+		/*   parent    */    form_id,       @
+		/*  callback   */    "RANGE_CREATE",@
+		/*      x      */    0.2,           @
+		/*      y      */    2.0,		    @
+		/*    width    */    1.0,			@
+		/*   height    */    0.0,			@
+		/*    label     */   "Apply",		@
+		/* labelinside  */    TRUE,			@
+		/*  highlight   */    TRUE			@
+	)
+	
+	cancel_btn = ui_button_create(			@
+		/*   parent    */     form_id,      @
+		/*  callback   */     "FORM_HIDE",  @
+		/*      x      */     1.3,	        @
+		/*      y      */     2.0,			@
+		/*    width    */     1.0,			@
+		/*   height    */     0.0,			@
+		/*    label     */    "Cancel",		@
+		/* labelinside  */    TRUE,         @
+		/*  highlight   */    TRUE			@
+	)
+	
+	dbx_rangeName= ui_databox_create(       @
+		/*    parent    */     form_id,     @
+		/*   callback   */     "",          @
+		/*      x      */      0.1,  		@
+		/*      y      */      0.0,         @
+		/* label_length */     0.0,         @
+		/*  box_length  */     2.3,   		@
+		/*    label    */     "Range Name", @
+		/*    value    */     "Name of Range",    @
+		/*  label_above */     TRUE,        @
+		/*   datatype   */     "STRING",    @
+		/*   num_vals   */     1            @
+	)
+	
+	dbx_targetValue= ui_databox_create(     @
+		/*    parent    */     form_id,     @
+		/*   callback   */     "",          @
+		/*      x      */      0.1,  		@
+		/*      y      */      1.0,         @
+		/* label_length */     0.0,         @
+		/*  box_length  */     2.3,   		@
+		/*    label    */     "Allowable Value",  @
+		/*    value    */     "1070.0",     @
+		/*  label_above */     TRUE,        @
+		/*   datatype   */     "REAL",      @
+		/*   num_vals   */     1            @
+	)
+
+END FUNCTION
+
+FUNCTION DISPLAY()
+	ui_form_display("create_range")
+
+END FUNCTION
+
+FUNCTION FORM_HIDE()
+	ui_form_hide("create_range")
+END FUNCTION
+
+FUNCTION RANGE_CREATE()
+	REAL target
+	INTEGER parts
+	REAL increment
+	STRING label[32]
+	REAL top_values(VIRTUAL)
+	REAL middle_values(VIRTUAL)
+	REAL bottom_values(VIRTUAL)
+	REAL small(VIRTUAL)
+	INTEGER n
+	INTEGER m
+	REAL max_value
+	
+	parts = 15
+	ui_wid_get( dbx_rangeName, "VALUE", label )
+	ui_wid_get( dbx_targetValue, "VALUE", target )
+	
+	increment = target/(parts - 1)
+	
+	SYS_ALLOCATE_ARRAY(top_values, 1, parts)
+	SYS_ALLOCATE_ARRAY(middle_values, 1, parts)
+	SYS_ALLOCATE_ARRAY(bottom_values, 1, parts)
+	SYS_ALLOCATE_ARRAY(small, 1, 2)
+	
+	m = parts
+	max_value = increment * parts
+	small(1) = max_value
+	small(2) = 0.0
+	
+	FOR(n=1 TO parts BY 1)
+		top_values(n) = increment * m
+		middle_values(n) = increment * m - 0.5 * increment
+		bottom_values(n) = increment * (m - 1)
+		m = m - 1
+	END FOR
+	
+	ga_range_create_m( label, 2 )
+	sys_poll_option( 2 )
+	ga_db_range_set_label_style_m( 1, 7, 2, 12, 3, 0, label )
+	ga_db_range_set_label_display_m( 1, 1, 0, 0, 0, 0, 0, label )
+	ga_db_range_set_label_control_m( 0, "", "", "", 0, label )
+	ga_db_range_set_no_subrange_m( 1, 0, "", 7, 0, label )
+	ga_db_range_set_attributes_m( 1, 1, 1, 0, 0, label )
+	ga_db_range_set_threshold_m( 1, 0, 0, 0., 0., 0, 0, "", "", 0, label)
+	ga_db_range_set_data_method_m( 1, 0, 2, 0, 0, small, [0], [""], 15, 0, label )
+	ga_db_range_set_subranges_flt_m( 15, top_values, bottom_values, middle_values , 0, label )
+	ga_db_range_set_custom_labels_m( 0, [0], [0], [""], 0, label )
+END FUNCTION
+
+END CLASS

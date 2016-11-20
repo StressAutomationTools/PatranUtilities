@@ -1,0 +1,24 @@
+CLASS SAT_MENU
+
+FUNCTION INIT()
+
+WIDGET		menubar, menu
+
+menubar = uil_primary.get_menubar_id()
+menu    = ui_menu_create (menubar, "sat_menu", "SAT Utilities")
+
+ui_item_create(menu, "create_range", "Create Range", False)
+
+END FUNCTION
+
+FUNCTION sat_menu (item_name)
+	STRING item_name[]
+	
+	SWITCH(item_name)
+		CASE("create_range")
+			UI_EXEC_FUNCTION("create_range", "display")
+	END SWITCH
+	
+END FUNCTION
+	
+END CLASS
