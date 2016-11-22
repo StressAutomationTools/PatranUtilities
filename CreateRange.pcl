@@ -1,7 +1,7 @@
 CLASS create_range
 
 	CLASSWIDE widget form_id, apply_btn, cancel_btn, dbx_rangeName, @
-	dbx_targetValue
+	dbx_targetValue, cbx_noData, wid_id, nd_wid
 
 FUNCTION INIT()
 	form_id = ui_form_create(				@
@@ -19,7 +19,7 @@ FUNCTION INIT()
 		/*   parent    */    form_id,       @
 		/*  callback   */    "RANGE_CREATE",@
 		/*      x      */    0.2,           @
-		/*      y      */    2.0,		    @
+		/*      y      */    1.5,		    @
 		/*    width    */    1.0,			@
 		/*   height    */    0.0,			@
 		/*    label     */   "Apply",		@
@@ -31,7 +31,7 @@ FUNCTION INIT()
 		/*   parent    */     form_id,      @
 		/*  callback   */     "FORM_HIDE",  @
 		/*      x      */     1.3,	        @
-		/*      y      */     2.0,			@
+		/*      y      */     1.5,			@
 		/*    width    */     1.0,			@
 		/*   height    */     0.0,			@
 		/*    label     */    "Cancel",		@
@@ -57,7 +57,7 @@ FUNCTION INIT()
 		/*    parent    */     form_id,     @
 		/*   callback   */     "",          @
 		/*      x      */      0.1,  		@
-		/*      y      */      1.0,         @
+		/*      y      */      0.5,         @
 		/* label_length */     0.0,         @
 		/*  box_length  */     2.3,   		@
 		/*    label    */     "Allowable Value",  @
@@ -66,6 +66,19 @@ FUNCTION INIT()
 		/*   datatype   */     "REAL",      @
 		/*   num_vals   */     1            @
 	)
+	
+	cbx_noData = ui_switch_create(            	@
+		/*   parent    */     form_id,                  @
+		/*  callback   */      "",                      @
+		/* Left_margin  */     0.1,            			@
+		/*      y       */     1.0,                    	@
+		/*  num_columns   */     2,        				@
+		/* label  */     		"Use No Data Label" ,   @
+		/* always_one  */      TRUE                     @
+	)
+	nd_wid = ui_item_create( cbx_noData, "1", "Yes", FALSE )
+	wid_id = ui_item_create( cbx_noData, "2", "No", TRUE)
+	ui_wid_set( wid_id, "VALUE", TRUE )
 
 END FUNCTION
 
@@ -90,10 +103,13 @@ FUNCTION RANGE_CREATE()
 	INTEGER n
 	INTEGER m
 	REAL max_value
+	LOGICAL noData
+	
 	
 	parts = 15
 	ui_wid_get( dbx_rangeName, "VALUE", label )
 	ui_wid_get( dbx_targetValue, "VALUE", target )
+	ui_wid_get( nd_wid, "VALUE", noData)
 	
 	increment = target/(parts - 1)
 	
@@ -124,7 +140,11 @@ FUNCTION RANGE_CREATE()
 	ga_db_range_set_threshold_m( 1, 0, 0, 0., 0., 0, 0, "", "", 0, label)
 	ga_db_range_set_data_method_m( 1, 0, 2, 0, 0, small, [0], [""], 15, 0, label )
 	ga_db_range_set_subranges_flt_m( 15, top_values, bottom_values, middle_values , 0, label )
-	ga_db_range_set_custom_labels_m( 0, [0], [0], [""], 0, label )
+	IF(noData)THEN
+		ga_db_range_set_custom_labels_m( 1, [0], [0], ["No Data"], 0, label )
+	ELSE
+		ga_db_range_set_custom_labels_m( 0, [0], [0], [""], 0, label )
+	END IF
 END FUNCTION
 
 END CLASS
